@@ -3,11 +3,13 @@ resource "random_id" "suffix" { byte_length = 4 }
 resource "aws_s3_bucket" "recordings" {
   count  = var.create_buckets && var.recordings_bucket_name == null ? 1 : 0
   bucket = local.recordings_bucket_name
+  force_destroy = true
 }
 
 resource "aws_s3_bucket" "outputs" {
   count  = var.create_buckets && var.outputs_bucket_name == null ? 1 : 0
   bucket = local.outputs_bucket_name
+  force_destroy = true
 }
 
 # Versioning + SSE-KMS

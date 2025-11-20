@@ -20,7 +20,8 @@ def lambda_handler(event, context):
 
         transcribe.start_transcription_job(
             TranscriptionJobName=job_name,
-            LanguageCode="es-MX",  # ajusta si tu audio es es-ES, en-US, etc.
+            IdentifyLanguage=True,
+            LanguageOptions=["es-US","es-ES"],
             Media={"MediaFileUri": media_uri},
             OutputBucketName=OUTPUTS_BUCKET,
             Settings={"ShowSpeakerLabels": True, "MaxSpeakerLabels": 2}
