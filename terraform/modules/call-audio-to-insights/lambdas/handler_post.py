@@ -43,32 +43,25 @@ def lambda_handler(event, context):
         "Resume la conversación en 3 viñetas, tono empático y profesional; "
         "al final propone una acción concreta.\n\nTexto:\n" + text
     )
-    native_request = {
-        "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": 512,
-        "temperature": 0.3,
-        "messages": [
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": prompt
-                    }
-                ]
-            }
-        ]
-    }
     response = bedrock.invoke_model(
         modelId=BEDROCK_MODELID,
-        body=json.dumps(native_request),
+        body=json.dumps({
+            "anthropic_version": "bedrock-2023-05-31",
+            "max_tokens": 512,
+            "temperature": 0.3,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
+        }),
         contentType="application/json",
         accept="application/json"
     )
 
-    model_payload = json.loads(response["body"].read())
-    summary = model_payload.get("outputText", "").strip()
-
+    model_response = json.loads(response["body"].read())
+    summary = model_response["content"][0]["text"].strip()
     # 3) Audio con Polly (voz Lucia)
     speech = polly.synthesize_speech(Text=summary[:3000], OutputFormat="mp3", VoiceId="Lucia")
     audio_key = f"outputs/audio/{detail['TranscriptionJobName']}.mp3"

@@ -4,6 +4,7 @@ resource "aws_lambda_function" "ingest" {
   handler       = "handler_ingest.lambda_handler"
   runtime       = "python3.12"
   filename      = data.archive_file.ingest_zip.output_path
+  source_code_hash = data.archive_file.ingest_zip.output_base64sha256
   timeout       = 60
   environment {
     variables = {
@@ -21,6 +22,7 @@ resource "aws_lambda_function" "post" {
   handler       = "handler_post.lambda_handler"
   runtime       = "python3.12"
   filename      = data.archive_file.post_zip.output_path
+  source_code_hash = data.archive_file.post_zip.output_base64sha256
   timeout       = 180
   environment {
     variables = {
