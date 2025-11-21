@@ -38,11 +38,25 @@ def lambda_handler(event, context):
     senti = comprehend.detect_sentiment(Text=text[:4500], LanguageCode="es")
 
     # 2) Resumen con Bedrock (Claude Haiku)
-    prompt = (
-        "Eres un analista de atención al cliente. "
-        "Resume la conversación en 3 viñetas, tono empático y profesional; "
-        "al final propone una acción concreta.\n\nTexto:\n" + text
-    )
+    prompt = f"""
+    Eres un analista de atención al cliente.
+    Con base en el siguiente texto de una llamada telefónica en español, quiero que:
+    1) Resumas la llamada en máximo 3 viñetas.
+    2) Propongas UNA acción concreta para el negocio.
+    3) Clasifiques si la llamada es de carácter PERSONAL o de NEGOCIOS.
+
+    Responde **EXCLUSIVAMENTE** con un JSON válido con esta estructura:
+
+    {{
+    "summary": "<resumen en español>",
+    "suggested_action": "<acción recomendada>",
+    "call_type": "<personal|negocios>"
+    }}
+
+    Texto de la llamada:
+    \"\"\"{text}\"\"\" 
+    """
+
     response = bedrock.invoke_model(
         modelId=BEDROCK_MODELID,
         body=json.dumps({
@@ -60,10 +74,16 @@ def lambda_handler(event, context):
         accept="application/json"
     )
 
-    model_response = json.loads(response["body"].read())
-    summary = model_response["content"][0]["text"].strip()
+    model_response = json.loads(response["body"].read())   
+    output = json.loads(model_response["content"][0]["text"].strip())
+
+    # normalizar
+    if output["call_type"] not in ["personal", "negocios"]:
+        output["call_type"] = "desconocido"
+
+    is_personal_call = (output["call_type"] == "personal")
     # 3) Audio con Polly (voz Lucia)
-    speech = polly.synthesize_speech(Text=summary[:3000], OutputFormat="mp3", VoiceId="Lucia")
+    speech = polly.synthesize_speech(Text=output["summary"][:3000], OutputFormat="mp3", VoiceId="Lucia")
     audio_key = f"outputs/audio/{detail['TranscriptionJobName']}.mp3"
     s3.put_object(Body=speech["AudioStream"].read(), Bucket=OUTPUTS_BUCKET, Key=audio_key)
 
@@ -71,7 +91,10 @@ def lambda_handler(event, context):
     result = {
         "transcription_job": detail.get("TranscriptionJobName"),
         "sentiment": senti,
-        "summary": summary,
+        "summary": output["summary"],
+        "suggested_action": output["suggested_action"],
+        "call_type": output["call_type"],             
+        "is_personal_call": is_personal_call, # True si se clasificó como personal
         "transcript_s3": uri,
         "audio_s3": f"s3://{OUTPUTS_BUCKET}/{audio_key}"
     }
