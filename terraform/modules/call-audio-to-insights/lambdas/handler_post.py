@@ -10,7 +10,6 @@ OUTPUTS_BUCKET  = os.environ["OUTPUTS_BUCKET"]
 BEDROCK_MODELID = os.environ["BEDROCK_MODELID"]
 
 def _extract_text_from_transcript(transcript_json):
-    # Transcribe JSON estándar: results->transcripts[0].transcript
     try:
         return transcript_json["results"]["transcripts"][0]["transcript"]
     except Exception:
