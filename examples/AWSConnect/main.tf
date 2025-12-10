@@ -1,5 +1,5 @@
 module "call_audio_to_insights" {
-  source                   = "../../terraform/modules/call-audio-to-insights"
+  source                   = "../../modules/call-audio-to-insights"
   project                  = var.project
   region                   = var.region
   bedrock_model_id         = var.bedrock_model
