@@ -10,15 +10,15 @@ resource "aws_iam_role" "lambda_post" {
 
 data "aws_iam_policy_document" "common" {
   statement {
-    actions   = ["logs:CreateLogGroup","logs:CreateLogStream","logs:PutLogEvents"]
+    actions   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
     resources = ["*"]
   }
   statement {
-    actions   = ["kms:Decrypt","kms:Encrypt","kms:GenerateDataKey","kms:DescribeKey"]
+    actions   = ["kms:Decrypt", "kms:Encrypt", "kms:GenerateDataKey", "kms:DescribeKey"]
     resources = [aws_kms_key.s3.arn]
   }
   statement {
-    actions   = ["s3:GetObject","s3:PutObject","s3:ListBucket"]
+    actions = ["s3:GetObject", "s3:PutObject", "s3:ListBucket"]
     resources = [
       "arn:aws:s3:::${local.recordings_bucket_name}",
       "arn:aws:s3:::${local.recordings_bucket_name}/*",
@@ -45,7 +45,7 @@ resource "aws_iam_role_policy_attachment" "post_common" {
 # Ingest: Transcribe
 data "aws_iam_policy_document" "ingest_extra" {
   statement {
-    actions   = ["transcribe:StartTranscriptionJob","transcribe:GetTranscriptionJob","transcribe:ListTranscriptionJobs"]
+    actions   = ["transcribe:StartTranscriptionJob", "transcribe:GetTranscriptionJob", "transcribe:ListTranscriptionJobs"]
     resources = ["*"]
   }
 }
@@ -63,11 +63,11 @@ resource "aws_iam_role_policy_attachment" "ingest_extra" {
 # Post: Comprehend, Bedrock, Polly
 data "aws_iam_policy_document" "post_extra" {
   statement {
-    actions   = ["comprehend:DetectSentiment","comprehend:DetectEntities","comprehend:DetectKeyPhrases"]
+    actions   = ["comprehend:DetectSentiment", "comprehend:DetectEntities", "comprehend:DetectKeyPhrases"]
     resources = ["*"]
   }
   statement {
-    actions   = ["bedrock:InvokeModel","bedrock:InvokeModelWithResponseStream"]
+    actions   = ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"]
     resources = ["*"]
   }
   statement {
@@ -126,6 +126,15 @@ data "aws_iam_policy_document" "step_function_policy" {
     ]
     resources = [
       "arn:aws:s3:::${local.recordings_bucket_name}/*"
+    ]
+  }
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:*"
+    ]
+    resources = [
+      aws_cloudwatch_log_group.call_audio_insights_sfn.arn
     ]
   }
 }

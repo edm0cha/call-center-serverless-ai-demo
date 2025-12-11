@@ -1,11 +1,11 @@
 resource "aws_lambda_function" "ingest" {
-  function_name = "${var.project}-ingest"
-  role          = aws_iam_role.lambda_ingest.arn
-  handler       = "handler_ingest.lambda_handler"
-  runtime       = "python3.12"
-  filename      = data.archive_file.ingest_zip.output_path
+  function_name    = "${var.project}-ingest-${random_id.suffix.hex}"
+  role             = aws_iam_role.lambda_ingest.arn
+  handler          = "handler_ingest.lambda_handler"
+  runtime          = "python3.12"
+  filename         = data.archive_file.ingest_zip.output_path
   source_code_hash = data.archive_file.ingest_zip.output_base64sha256
-  timeout       = 60
+  timeout          = 60
   environment {
     variables = {
       RECORDINGS_BUCKET   = local.recordings_bucket_name
@@ -17,13 +17,13 @@ resource "aws_lambda_function" "ingest" {
 }
 
 resource "aws_lambda_function" "post" {
-  function_name = "${var.project}-post"
-  role          = aws_iam_role.lambda_post.arn
-  handler       = "handler_post.lambda_handler"
-  runtime       = "python3.12"
-  filename      = data.archive_file.post_zip.output_path
+  function_name    = "${var.project}-post-${random_id.suffix.hex}"
+  role             = aws_iam_role.lambda_post.arn
+  handler          = "handler_post.lambda_handler"
+  runtime          = "python3.12"
+  filename         = data.archive_file.post_zip.output_path
   source_code_hash = data.archive_file.post_zip.output_base64sha256
-  timeout       = 180
+  timeout          = 180
   environment {
     variables = {
       OUTPUTS_BUCKET  = local.outputs_bucket_name
@@ -34,7 +34,6 @@ resource "aws_lambda_function" "post" {
   }
 }
 
-# Empaquetado del código
 data "archive_file" "ingest_zip" {
   type        = "zip"
   source_file = "${path.module}/lambdas/handler_ingest.py"

@@ -1,4 +1,3 @@
-# Crea instancia (básica). Requiere aceptar/activar servicio en la cuenta.
 resource "aws_connect_instance" "this" {
   identity_management_type = "CONNECT_MANAGED"
   inbound_calls_enabled    = true
@@ -6,7 +5,7 @@ resource "aws_connect_instance" "this" {
   instance_alias           = var.project
 }
 
-# Enlaza S3 para CALL_RECORDINGS (graba en recordings/audio/)
+# CALL_RECORDINGS (recordings in {recordings_bucket}/audio/)
 resource "aws_connect_instance_storage_config" "call_recordings" {
   instance_id   = aws_connect_instance.this.id
   resource_type = "CALL_RECORDINGS"
