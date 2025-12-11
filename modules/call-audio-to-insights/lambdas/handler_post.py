@@ -118,16 +118,16 @@ def lambda_handler(event, context):
     table.put_item(Item=result)
 
     # 5) Metrics
-    if senti['Sentiment'] is "POSITIVE":
+    if result['sentiment'] == "POSITIVE":
         metrics.add_metric(name="positiveSentiment", unit=MetricUnit.Count, value=1)
-    elif senti['Sentiment'] is "NEGATIVE":
+    elif result['sentiment'] == "NEGATIVE":
         metrics.add_metric(name="negativeSentiment", unit=MetricUnit.Count, value=1)
     else:
         metrics.add_metric(name="mixedSentiment", unit=MetricUnit.Count, value=1)
 
-    if output["call_type"] is "personal":
+    if result["call_type"] == "personal":
         metrics.add_metric(name="personalCall", unit=MetricUnit.Count, value=1)
-    elif output["call_type"] is "business":
+    elif result["call_type"] == "business":
         metrics.add_metric(name="businessCall", unit=MetricUnit.Count, value=1)
     else:
         metrics.add_metric(name="unknownCall", unit=MetricUnit.Count, value=1)
