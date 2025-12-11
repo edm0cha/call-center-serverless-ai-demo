@@ -5,7 +5,7 @@ resource "aws_lambda_function" "ingest" {
   runtime          = "python3.12"
   filename         = data.archive_file.ingest_zip.output_path
   source_code_hash = data.archive_file.ingest_zip.output_base64sha256
-  timeout          = 60
+  timeout          = 120
   environment {
     variables = {
       RECORDINGS_BUCKET   = local.recordings_bucket_name
@@ -23,6 +23,7 @@ resource "aws_lambda_function" "post" {
   runtime          = "python3.12"
   filename         = data.archive_file.post_zip.output_path
   source_code_hash = data.archive_file.post_zip.output_base64sha256
+  layers           = ["arn:aws:lambda:${var.region}:${local.aws_account_id}:layer:AWSLambdaPowertoolsPythonV2:78"]
   timeout          = 180
   environment {
     variables = {
@@ -30,6 +31,7 @@ resource "aws_lambda_function" "post" {
       BEDROCK_MODELID = var.bedrock_model_id
       REGION          = var.region
       POLLY_VOICE_ID  = var.polly_voice_id
+      DYNAMO_DB_TABLE = aws_dynamodb_table.this.name
     }
   }
 }

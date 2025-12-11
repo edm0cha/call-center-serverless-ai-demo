@@ -26,6 +26,10 @@ data "aws_iam_policy_document" "common" {
       "arn:aws:s3:::${local.outputs_bucket_name}/*"
     ]
   }
+  statement {
+    actions   = ["dynamodb:PutItem", "dynamodb:UpdateItem"]
+    resources = [aws_dynamodb_table.this.arn]
+  }
 }
 
 resource "aws_iam_policy" "common" {

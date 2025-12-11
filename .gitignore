@@ -1,4 +1,5 @@
 terraform/examples/audios/*
 modules/*/build/
+modules/*/layers
 *.zip
 .DS_Store
