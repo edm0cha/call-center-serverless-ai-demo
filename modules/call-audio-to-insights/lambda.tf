@@ -27,6 +27,7 @@ resource "aws_lambda_function" "post" {
   timeout          = 180
   environment {
     variables = {
+      PROJECT_NAME    = "${var.project}-${random_id.suffix.hex}"
       OUTPUTS_BUCKET  = local.outputs_bucket_name
       BEDROCK_MODELID = var.bedrock_model_id
       REGION          = var.region

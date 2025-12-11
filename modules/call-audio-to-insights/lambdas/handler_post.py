@@ -1,7 +1,6 @@
 import os, json, boto3, re
 from urllib.parse import urlparse
 
-from aws_lambda_powertools import Logger
 # Added Metrics
 from aws_lambda_powertools import Metrics
 from aws_lambda_powertools.metrics import MetricUnit
@@ -19,11 +18,16 @@ table = dynamodb.Table(DYNAMO_DB_TABLE)
 OUTPUTS_BUCKET  = os.environ["OUTPUTS_BUCKET"]
 BEDROCK_MODELID = os.environ["BEDROCK_MODELID"]
 
+# Initialize Metrics
+metrics = Metrics(service=os.environ["PROJECT_NAME"], namespace="call-insights")
+
 def _extract_text_from_transcript(transcript_json):
     try:
         return transcript_json["results"]["transcripts"][0]["transcript"]
     except Exception:
         return ""
+
+@metrics.log_metrics
 
 def lambda_handler(event, context):
     bucket = OUTPUTS_BUCKET
@@ -81,7 +85,7 @@ def lambda_handler(event, context):
     print(f"Bedrock model output: {output}")
 
     # normalizar
-    if output["call_type"] not in ["personal", "negocios"]:
+    if output["call_type"] not in ["personal", "business"]:
         output["call_type"] = "desconocido"
 
     is_personal_call = (output["call_type"] == "personal")
@@ -112,5 +116,18 @@ def lambda_handler(event, context):
     )
 
     table.put_item(Item=result)
+
+    # 5) Metrics
+    if senti['Sentiment'] is "POSITIVE":
+        metrics.add_metric(name="positiveSentiment", unit=MetricUnit.Count, value=1)
+    elif senti['Sentiment'] is "NEGATIVE":
+        metrics.add_metric(name="negativeSentiment", unit=MetricUnit.Count, value=1)
+    else:
+        metrics.add_metric(name="mixedSentiment", unit=MetricUnit.Count, value=1)
+
+    if output["call_type"] is "personal":
+        metrics.add_metric(name="personalCall", unit=MetricUnit.Count, value=1)
+    elif output["call_type"] is "business":
+        metrics.add_metric(name="businessCall", unit=MetricUnit.Count, value=1)
 
     return {"ok": True, "result_key": result_key}
