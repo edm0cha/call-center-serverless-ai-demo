@@ -3,3 +3,6 @@ modules/*/build/
 modules/*/layers
 *.zip
 .DS_Store
+
+.terraform
+.terraform.*
