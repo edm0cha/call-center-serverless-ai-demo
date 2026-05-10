@@ -138,7 +138,7 @@ data "aws_iam_policy_document" "step_function_policy" {
       "logs:*"
     ]
     resources = [
-      aws_cloudwatch_log_group.call_audio_insights_sfn.arn
+      "*"
     ]
   }
 }

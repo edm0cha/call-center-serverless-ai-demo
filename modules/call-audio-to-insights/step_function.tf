@@ -2,12 +2,6 @@ resource "aws_sfn_state_machine" "this" {
   name     = "${var.project}-state-machine-${random_id.suffix.hex}"
   role_arn = aws_iam_role.step_function_role.arn
 
-  logging_configuration {
-    include_execution_data = true
-    level                  = "ALL"
-    log_destination        = "${aws_cloudwatch_log_group.call_audio_insights_sfn.arn}:*"
-  }
-
   definition = <<EOF
 {
   "Comment": "State Machine for Audio to Insights",

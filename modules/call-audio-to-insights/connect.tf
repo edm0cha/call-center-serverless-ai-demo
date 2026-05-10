@@ -2,7 +2,7 @@ resource "aws_connect_instance" "this" {
   identity_management_type = "CONNECT_MANAGED"
   inbound_calls_enabled    = true
   outbound_calls_enabled   = false
-  instance_alias           = var.project
+  instance_alias           = "${var.project}-${random_id.suffix.hex}"
 }
 
 # CALL_RECORDINGS (recordings in {recordings_bucket}/audio/)
