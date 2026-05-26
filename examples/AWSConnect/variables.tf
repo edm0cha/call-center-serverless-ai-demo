@@ -17,8 +17,3 @@ variable "polly_voice" {
   type    = string
   default = "Lucia"
 }
-
-variable "transcribe_language_code" {
-  type    = string
-  default = "es-MX"
-}
