@@ -11,16 +11,26 @@ resource "aws_sfn_state_machine" "this" {
   definition = <<EOF
 {
   "Comment": "State Machine for Audio to Insights",
-  "StartAt": "IngestAudio",
+  "StartAt": "TranscribeAudio",
   "States": {
-    "IngestAudio": {
+    "TranscribeAudio": {
       "Type": "Task",
-      "Resource": "${aws_lambda_function.ingest.arn}",
-      "Next": "PostProcess"
+      "Resource": "${aws_lambda_function.transcribe.arn}",
+      "Next": "DetectSentiment"
     },
-    "PostProcess": {
+    "DetectSentiment": {
       "Type": "Task",
-      "Resource": "${aws_lambda_function.post.arn}",
+      "Resource": "${aws_lambda_function.sentiment.arn}",
+      "Next": "AnalyzeBedrock"
+    }
+    "AnalyzeBedrock": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.bedrock.arn}",
+      "Next": "SummaryPolly"
+    }
+    "SummaryPolly": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.polly.arn}",
       "End": true
     }
   }

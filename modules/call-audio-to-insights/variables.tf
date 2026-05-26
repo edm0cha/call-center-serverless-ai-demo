@@ -1,14 +1,14 @@
 variable "project" { type = string }
-variable "region"  { type = string }
+variable "region" { type = string }
 
 # Prefijos (por si usas Connect o cargas manualmente audios)
-variable "recordings_prefix" { 
-  type = string 
-  default = "audio/" 
+variable "recordings_prefix" {
+  type    = string
+  default = "audio/"
 }
-variable "outputs_prefix"    { 
-  type = string
-  default = "outputs/" 
+variable "outputs_prefix" {
+  type    = string
+  default = "outputs/"
 }
 
 # Modelo de Bedrock (ajusta según región/permisos habilitados)
@@ -37,11 +37,11 @@ variable "create_buckets" {
 }
 
 # Si no los creas aquí, puedes inyectar nombres de buckets existentes
-variable "recordings_bucket_name" { 
-  type = string 
-  default = null 
+variable "recordings_bucket_name" {
+  type    = string
+  default = null
 }
-variable "outputs_bucket_name"    { 
-  type = string
-  default = null 
+variable "outputs_bucket_name" {
+  type    = string
+  default = null
 }
