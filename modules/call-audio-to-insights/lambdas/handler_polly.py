@@ -25,7 +25,7 @@ def lambda_handler(event, context):
 
     # 1) Polly audio creation
     speech = polly.synthesize_speech(
-        Text=summary[:3000], OutputFormat="mp3", VoiceId="Lucia"
+        Text=summary[:3000], OutputFormat="mp3", VoiceId=os.environ["POLLY_VOICE_ID"]
     )
     audio_key = f"outputs/audio/{job_name}.mp3"
     s3.put_object(
