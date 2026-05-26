@@ -1,10 +1,31 @@
-resource "aws_iam_role" "lambda_ingest" {
-  name               = "${var.project}-lambda-ingest"
+# Lambda Roles and policies
+data "aws_iam_policy_document" "lambda_assume" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "lambda_transcribe" {
+  name               = "${var.project}-lambda-transcribe"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
 }
 
-resource "aws_iam_role" "lambda_post" {
-  name               = "${var.project}-lambda-post"
+resource "aws_iam_role" "lambda_sentiment" {
+  name               = "${var.project}-lambda-sentiment"
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
+}
+
+resource "aws_iam_role" "lambda_bedrock" {
+  name               = "${var.project}-lambda-bedrock"
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
+}
+
+resource "aws_iam_role" "lambda_polly" {
+  name               = "${var.project}-lambda-polly"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
 }
 
@@ -37,61 +58,101 @@ resource "aws_iam_policy" "common" {
   policy = data.aws_iam_policy_document.common.json
 }
 
-resource "aws_iam_role_policy_attachment" "ingest_common" {
-  role       = aws_iam_role.lambda_ingest.name
+resource "aws_iam_role_policy_attachment" "transcribe_common" {
+  role       = aws_iam_role.lambda_transcribe.name
   policy_arn = aws_iam_policy.common.arn
 }
-resource "aws_iam_role_policy_attachment" "post_common" {
-  role       = aws_iam_role.lambda_post.name
+resource "aws_iam_role_policy_attachment" "sentiment_common" {
+  role       = aws_iam_role.lambda_sentiment.name
   policy_arn = aws_iam_policy.common.arn
 }
 
-# Ingest: Transcribe
-data "aws_iam_policy_document" "ingest_extra" {
+resource "aws_iam_role_policy_attachment" "bedrock_common" {
+  role       = aws_iam_role.lambda_bedrock.name
+  policy_arn = aws_iam_policy.common.arn
+}
+
+resource "aws_iam_role_policy_attachment" "polly_common" {
+  role       = aws_iam_role.lambda_polly.name
+  policy_arn = aws_iam_policy.common.arn
+}
+
+# Transcribe
+data "aws_iam_policy_document" "transcribe" {
   statement {
     actions   = ["transcribe:StartTranscriptionJob", "transcribe:GetTranscriptionJob", "transcribe:ListTranscriptionJobs"]
     resources = ["*"]
   }
 }
 
-resource "aws_iam_policy" "ingest_extra" {
-  name   = "${var.project}-ingest-extra"
-  policy = data.aws_iam_policy_document.ingest_extra.json
+resource "aws_iam_policy" "transcribe" {
+  name   = "${var.project}-transcribe-policy"
+  policy = data.aws_iam_policy_document.transcribe.json
 }
 
-resource "aws_iam_role_policy_attachment" "ingest_extra" {
-  role       = aws_iam_role.lambda_ingest.name
-  policy_arn = aws_iam_policy.ingest_extra.arn
+resource "aws_iam_role_policy_attachment" "transcribe" {
+  role       = aws_iam_role.lambda_transcribe.name
+  policy_arn = aws_iam_policy.transcribe.arn
 }
 
-# Post: Comprehend, Bedrock, Polly
-data "aws_iam_policy_document" "post_extra" {
+# Sentiment
+data "aws_iam_policy_document" "sentiment" {
   statement {
     actions   = ["comprehend:DetectSentiment", "comprehend:DetectEntities", "comprehend:DetectKeyPhrases"]
     resources = ["*"]
   }
+}
+
+resource "aws_iam_policy" "sentiment" {
+  name   = "${var.project}-sentiment-policy"
+  policy = data.aws_iam_policy_document.sentiment.json
+}
+
+resource "aws_iam_role_policy_attachment" "sentiment" {
+  role       = aws_iam_role.lambda_sentiment.name
+  policy_arn = aws_iam_policy.sentiment.arn
+}
+
+# Bedrock
+
+data "aws_iam_policy_document" "bedrock" {
   statement {
     actions   = ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"]
     resources = ["*"]
   }
-  statement {
-    actions   = ["polly:SynthesizeSpeech"]
-    resources = ["*"]
-  }
+
   statement {
     actions   = ["aws-marketplace:ViewSubscriptions", "aws-marketplace:Subscribe"]
     resources = ["*"]
   }
 }
 
-resource "aws_iam_policy" "post_extra" {
-  name   = "${var.project}-post-extra"
-  policy = data.aws_iam_policy_document.post_extra.json
+resource "aws_iam_policy" "bedrock" {
+  name   = "${var.project}-bedrock-policy"
+  policy = data.aws_iam_policy_document.bedrock.json
 }
 
-resource "aws_iam_role_policy_attachment" "post_extra" {
-  role       = aws_iam_role.lambda_post.name
-  policy_arn = aws_iam_policy.post_extra.arn
+resource "aws_iam_role_policy_attachment" "bedrock" {
+  role       = aws_iam_role.lambda_bedrock.name
+  policy_arn = aws_iam_policy.bedrock.arn
+}
+
+# Polly
+data "aws_iam_policy_document" "polly" {
+  statement {
+    actions   = ["polly:SynthesizeSpeech"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "polly" {
+  name   = "${var.project}-polly-policy"
+  policy = data.aws_iam_policy_document.polly.json
+}
+
+resource "aws_iam_role_policy_attachment" "polly" {
+  role       = aws_iam_role.lambda_polly.name
+  policy_arn = aws_iam_policy.polly.arn
 }
 
 # Step Function IAM Role and Policy
@@ -119,8 +180,10 @@ data "aws_iam_policy_document" "step_function_policy" {
       "lambda:InvokeAsync"
     ]
     resources = [
-      aws_lambda_function.ingest.arn,
-      aws_lambda_function.post.arn
+      aws_lambda_function.transcribe.arn,
+      aws_lambda_function.sentiment.arn,
+      aws_lambda_function.bedrock.arn,
+      aws_lambda_function.polly.arn
     ]
   }
   statement {
