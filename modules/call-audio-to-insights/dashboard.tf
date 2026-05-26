@@ -11,15 +11,38 @@ resource "aws_cloudwatch_dashboard" "this" {
         "x" : 0,
         "properties" : {
           "metrics" : [
-            ["AWS/Lambda", "Invocations", "FunctionName", aws_lambda_function.post.function_name, { "id" : "invokes", "label" : "Total Requests" }],
-            ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.post.function_name, { "id" : "duration", "label" : "Average Response Time", "stat" : "Average" }],
-            ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.post.function_name, { "id" : "invoke_errors", "visible" : false }],
-            ["AWS/Lambda", "Url4xxCount", "FunctionName", aws_lambda_function.post.function_name, { "id" : "errors_400", "visible" : false }],
-            ["AWS/Lambda", "Url5xxCount", "FunctionName", aws_lambda_function.post.function_name, { "id" : "errors_500", "visible" : false }],
+            ["AWS/Lambda", "Invocations", "FunctionName", aws_lambda_function.transcribe.function_name, { "id" : "invokes", "label" : "Total Requests" }],
+            ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.transcribe.function_name, { "id" : "duration", "label" : "Average Response Time", "stat" : "Average" }],
+            ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.transcribe.function_name, { "id" : "invoke_errors", "visible" : false }],
+            ["AWS/Lambda", "Url4xxCount", "FunctionName", aws_lambda_function.transcribe.function_name, { "id" : "errors_400", "visible" : false }],
+            ["AWS/Lambda", "Url5xxCount", "FunctionName", aws_lambda_function.transcribe.function_name, { "id" : "errors_500", "visible" : false }],
             [{ "label" : "Total Errors", "color" : "#d62728", "expression" : "invoke_errors + errors_400 + errors_500", "id" : "total_errors" }],
             [{ "label" : "Sucess Rate (%)", "color" : "#2ca02c", "expression" : "100 - ((total_errors/invokes) * 100)", "id" : "sucess_rate" }]
           ],
-          "title" : "Post Ingestion Lambda",
+          "title" : "Transcribe Lambda",
+          "region" : var.region,
+          "stat" : "Sum",
+          "view" : "singleValue",
+          "setPeriodToTimeRange" : true
+        }
+      },
+      {
+        "type" : "metric",
+        "height" : 5,
+        "width" : 10,
+        "y" : 0,
+        "x" : 10,
+        "properties" : {
+          "metrics" : [
+            ["AWS/Lambda", "Invocations", "FunctionName", aws_lambda_function.sentiment.function_name, { "id" : "invokes", "label" : "Total Requests" }],
+            ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.sentiment.function_name, { "id" : "duration", "label" : "Average Response Time", "stat" : "Average" }],
+            ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.sentiment.function_name, { "id" : "invoke_errors", "visible" : false }],
+            ["AWS/Lambda", "Url4xxCount", "FunctionName", aws_lambda_function.sentiment.function_name, { "id" : "errors_400", "visible" : false }],
+            ["AWS/Lambda", "Url5xxCount", "FunctionName", aws_lambda_function.sentiment.function_name, { "id" : "errors_500", "visible" : false }],
+            [{ "label" : "Total Errors", "color" : "#d62728", "expression" : "invoke_errors + errors_400 + errors_500", "id" : "total_errors" }],
+            [{ "label" : "Sucess Rate (%)", "color" : "#2ca02c", "expression" : "100 - ((total_errors/invokes) * 100)", "id" : "sucess_rate" }]
+          ],
+          "title" : "Transcribe Lambda",
           "region" : var.region,
           "stat" : "Sum",
           "view" : "singleValue",
@@ -30,7 +53,7 @@ resource "aws_cloudwatch_dashboard" "this" {
         "height" : 5,
         "width" : 7,
         "y" : 0,
-        "x" : 10,
+        "x" : 20,
         "type" : "metric",
         "properties" : {
           "view" : "timeSeries",
