@@ -75,9 +75,9 @@ def lambda_handler(event, context):
     output = json.loads(model_response["content"][0]["text"].strip())
     print(f"Bedrock model output: {output}")
 
-    # normalizar
+    # Normalize call_type to a known value
     if output["call_type"] not in ["personal", "business"]:
-        output["call_type"] = "desconocido"
+        output["call_type"] = "unknown"
 
     is_personal_call = output["call_type"] == "personal"
     print(f"Finished analysis for {job_name}, storing results")

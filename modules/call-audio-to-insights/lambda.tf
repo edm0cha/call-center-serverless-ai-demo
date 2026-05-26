@@ -11,7 +11,6 @@ resource "aws_lambda_function" "transcribe" {
     variables = {
       PROJECT_NAME        = "${var.project}-${random_id.suffix.hex}"
       OUTPUTS_BUCKET      = local.outputs_bucket_name
-      TRANSCRIBE_LANGCODE = var.transcribe_language_code
     }
   }
 }
