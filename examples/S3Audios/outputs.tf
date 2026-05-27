@@ -46,6 +46,10 @@ output "lambda_polly_arn" {
   value = module.call_audio_to_insights.lambda_polly_arn
 }
 
+output "lambda_ses_arn" {
+  value = module.call_audio_to_insights.lambda_ses_arn
+}
+
 # ── Step Function ─────────────────────────────────────────────────────────────
 output "step_function_arn" {
   value = module.call_audio_to_insights.step_function_arn
@@ -58,4 +62,13 @@ output "step_function_name" {
 # ── CloudWatch ────────────────────────────────────────────────────────────────
 output "dashboard_name" {
   value = module.call_audio_to_insights.dashboard_name
+}
+
+# ── SES ───────────────────────────────────────────────────────────────────────
+output "ses_email_identity_arn" {
+  value = module.call_audio_to_insights.ses_email_identity_arn
+}
+
+output "ses_verified_email" {
+  value = module.call_audio_to_insights.ses_verified_email
 }
