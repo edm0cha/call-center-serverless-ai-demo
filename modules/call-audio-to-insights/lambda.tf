@@ -72,6 +72,24 @@ resource "aws_lambda_function" "polly" {
   }
 }
 
+resource "aws_lambda_function" "ses" {
+  function_name    = "${var.project}-ses-${random_id.suffix.hex}"
+  role             = aws_iam_role.lambda_ses.arn
+  handler          = "handler_ses.lambda_handler"
+  runtime          = "python3.12"
+  filename         = data.archive_file.ses_zip.output_path
+  source_code_hash = data.archive_file.ses_zip.output_base64sha256
+  layers           = ["arn:aws:lambda:${var.region}:${local.aws_account_id}:layer:AWSLambdaPowertoolsPythonV2:78"]
+  timeout          = 60
+  environment {
+    variables = {
+      PROJECT_NAME    = "${var.project}-${random_id.suffix.hex}"
+      DYNAMO_DB_TABLE = aws_dynamodb_table.this.name
+      SOURCE_EMAIL    = var.verified_email
+    }
+  }
+}
+
 data "archive_file" "transcribe_zip" {
   type        = "zip"
   source_file = "${path.module}/lambdas/handler_transcribe.py"
@@ -94,4 +112,10 @@ data "archive_file" "polly_zip" {
   type        = "zip"
   source_file = "${path.module}/lambdas/handler_polly.py"
   output_path = "${path.module}/build/polly.zip"
+}
+
+data "archive_file" "ses_zip" {
+  type        = "zip"
+  source_file = "${path.module}/lambdas/handler_ses.py"
+  output_path = "${path.module}/build/ses.zip"
 }

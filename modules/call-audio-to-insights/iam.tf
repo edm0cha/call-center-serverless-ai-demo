@@ -29,6 +29,11 @@ resource "aws_iam_role" "lambda_polly" {
   assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
 }
 
+resource "aws_iam_role" "lambda_ses" {
+  name               = "${var.project}-lambda-ses"
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
+}
+
 data "aws_iam_policy_document" "common" {
   statement {
     actions   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
@@ -74,6 +79,11 @@ resource "aws_iam_role_policy_attachment" "bedrock_common" {
 
 resource "aws_iam_role_policy_attachment" "polly_common" {
   role       = aws_iam_role.lambda_polly.name
+  policy_arn = aws_iam_policy.common.arn
+}
+
+resource "aws_iam_role_policy_attachment" "ses_common" {
+  role       = aws_iam_role.lambda_ses.name
   policy_arn = aws_iam_policy.common.arn
 }
 
@@ -155,6 +165,27 @@ resource "aws_iam_role_policy_attachment" "polly" {
   policy_arn = aws_iam_policy.polly.arn
 }
 
+# SES
+data "aws_iam_policy_document" "ses" {
+  count = var.verified_email != "" ? 1 : 0
+  statement {
+    actions   = ["ses:SendEmail", "ses:SendRawEmail"]
+    resources = [aws_ses_email_identity.email[0].arn]
+  }
+}
+
+resource "aws_iam_policy" "ses" {
+  count  = var.verified_email != "" ? 1 : 0
+  name   = "${var.project}-ses-policy"
+  policy = data.aws_iam_policy_document.ses[0].json
+}
+
+resource "aws_iam_role_policy_attachment" "ses" {
+  count      = var.verified_email != "" ? 1 : 0
+  role       = aws_iam_role.lambda_ses.name
+  policy_arn = aws_iam_policy.ses[0].arn
+}
+
 # Step Function IAM Role and Policy
 data "aws_iam_policy_document" "step_function_assume_role" {
   statement {
@@ -183,7 +214,8 @@ data "aws_iam_policy_document" "step_function_policy" {
       aws_lambda_function.transcribe.arn,
       aws_lambda_function.sentiment.arn,
       aws_lambda_function.bedrock.arn,
-      aws_lambda_function.polly.arn
+      aws_lambda_function.polly.arn,
+      aws_lambda_function.ses.arn
     ]
   }
   statement {
