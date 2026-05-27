@@ -7,10 +7,10 @@ variable "recordings_prefix" {
   default = "audio/"
 }
 
-# Bedrock model ID to use for call analysis
+# Bedrock model ID or Inference profile ID to use for call analysis
 variable "bedrock_model_id" {
   type        = string
-  description = "e.g. anthropic.claude-3-haiku-20240307-v1:0"
+  description = "e.g. us.anthropic.claude-haiku-4-5-20251001-v1:0"
 }
 
 # Polly voice ID for speech synthesis (e.g. 'Lucia' for Spanish)
