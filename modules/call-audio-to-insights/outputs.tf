@@ -57,6 +57,11 @@ output "lambda_polly_arn" {
   value       = aws_lambda_function.polly.arn
 }
 
+output "lambda_ses_arn" {
+  description = "ARN of the SES Lambda function"
+  value       = aws_lambda_function.ses.arn
+}
+
 # ── Step Function ─────────────────────────────────────────────────────────────
 output "step_function_arn" {
   description = "ARN of the Step Functions state machine orchestrating the pipeline"
@@ -83,4 +88,15 @@ output "connect_instance_arn" {
 output "dashboard_name" {
   description = "Name of the CloudWatch dashboard for call insights monitoring"
   value       = aws_cloudwatch_dashboard.this.dashboard_name
+}
+
+# ── SES ───────────────────────────────────────────────────────────────────────
+output "ses_email_identity_arn" {
+  description = "ARN of the SES verified email identity (null if verified_email was not provided)"
+  value       = var.verified_email != "" ? aws_ses_email_identity.email[0].arn : null
+}
+
+output "ses_verified_email" {
+  description = "Email address registered as an SES identity (null if verified_email was not provided)"
+  value       = var.verified_email != "" ? aws_ses_email_identity.email[0].email : null
 }

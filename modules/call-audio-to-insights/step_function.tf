@@ -32,6 +32,11 @@ resource "aws_sfn_state_machine" "this" {
     "SummaryPolly": {
       "Type": "Task",
       "Resource": "${aws_lambda_function.polly.arn}",
+      "Next": "SendEmail"
+    },
+    "SendEmail": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.ses.arn}",
       "End": true
     }
   }
