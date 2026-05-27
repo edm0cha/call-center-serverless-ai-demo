@@ -11,6 +11,7 @@ resource "aws_lambda_function" "transcribe" {
     variables = {
       PROJECT_NAME        = "${var.project}-${random_id.suffix.hex}"
       OUTPUTS_BUCKET      = local.outputs_bucket_name
+      DYNAMO_DB_TABLE = aws_dynamodb_table.this.name
     }
   }
 }

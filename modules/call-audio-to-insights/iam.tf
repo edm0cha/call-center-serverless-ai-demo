@@ -48,7 +48,7 @@ data "aws_iam_policy_document" "common" {
     ]
   }
   statement {
-    actions   = ["dynamodb:PutItem", "dynamodb:UpdateItem"]
+    actions   = ["dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:GetItem"]
     resources = [aws_dynamodb_table.this.arn]
   }
 }
@@ -195,13 +195,31 @@ data "aws_iam_policy_document" "step_function_policy" {
       "arn:aws:s3:::${local.recordings_bucket_name}/*"
     ]
   }
+  # Required for Step Functions to write execution logs to the log group
   statement {
     effect = "Allow"
     actions = [
-      "logs:*"
+      "logs:CreateLogDelivery",
+      "logs:GetLogDelivery",
+      "logs:UpdateLogDelivery",
+      "logs:DeleteLogDelivery",
+      "logs:ListLogDeliveries",
+      "logs:PutResourcePolicy",
+      "logs:DescribeResourcePolicies",
+      "logs:DescribeLogGroups"
+    ]
+    resources = ["*"]
+  }
+  # Allow writing log events to the specific log group
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
     ]
     resources = [
-      aws_cloudwatch_log_group.call_audio_insights_sfn.arn
+      "${aws_cloudwatch_log_group.call_audio_insights_sfn.arn}:*"
     ]
   }
 }
