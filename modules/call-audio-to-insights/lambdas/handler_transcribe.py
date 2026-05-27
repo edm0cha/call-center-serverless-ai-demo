@@ -35,7 +35,7 @@ def lambda_handler(event, context):
     transcribe.start_transcription_job(
         TranscriptionJobName=job_name,
         IdentifyLanguage=True,
-        LanguageOptions=["es-US", "es-ES"],
+        LanguageOptions=["es-US", "es-ES", "en-US", "en-GB"],
         Media={"MediaFileUri": media_uri},
         OutputBucketName=OUTPUTS_BUCKET,
         Settings={"ShowSpeakerLabels": True, "MaxSpeakerLabels": 2},

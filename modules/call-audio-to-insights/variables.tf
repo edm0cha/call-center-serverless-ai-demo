@@ -41,3 +41,10 @@ variable "verified_email" {
   type    = string
   default = ""
 }
+
+# Language for Bedrock analysis output (e.g. "English", "Spanish")
+variable "response_language" {
+  type        = string
+  default     = "Spanish"
+  description = "Language in which Bedrock should return the summary, suggested action, and call type analysis."
+}

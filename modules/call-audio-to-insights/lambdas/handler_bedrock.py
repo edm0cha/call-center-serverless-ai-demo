@@ -13,6 +13,7 @@ table = dynamodb.Table(DYNAMO_DB_TABLE)
 
 OUTPUTS_BUCKET = os.environ["OUTPUTS_BUCKET"]
 BEDROCK_MODELID = os.environ["BEDROCK_MODELID"]
+RESPONSE_LANGUAGE = os.environ.get("RESPONSE_LANGUAGE", "Spanish")
 
 # Initialize Metrics
 metrics = Metrics(service="call-insights", namespace=os.environ["PROJECT_NAME"])
@@ -39,23 +40,24 @@ def lambda_handler(event, context):
 
     # 1) Bedrock analysis
     prompt = f"""
-    Eres un analista de atención al cliente de una importante empresa de envio de paquetería.
-    Con base en el siguiente texto de una llamada telefónica en español, quiero que:
-    1) Resumas la llamada en máximo 3 viñetas.
-    2) Propongas UNA acción concreta para el negocio.
-    3) Clasifiques si la llamada es de carácter PERSONAL o de NEGOCIOS. Una llamada personal involucra mencionar amigos, familia o temas no relacionados al negocio
+    You are a customer service analyst at a major parcel delivery company.
+    Based on the following phone call transcript, please:
+    1) Summarize the call in a maximum of 3 bullet points.
+    2) Propose ONE concrete action for the business.
+    3) Classify whether the call is PERSONAL or BUSINESS in nature. A personal call involves mentions of friends, family, or topics unrelated to the business.
 
-    Responde **EXCLUSIVAMENTE** con un JSON válido con esta estructura, los valores del json deben ser **SOLAMENTE** cadenas de texto:
+    Respond **EXCLUSIVELY** with a valid JSON object using this structure, all values must be **strings only**:
 
     {{
-    "summary": "<resumen en español>",
-    "suggested_action": "<acción recomendada>",
-    "call_type": "<personal|negocios>"
+    "summary": "<call summary>",
+    "suggested_action": "<recommended action>",
+    "call_type": "<personal|business>"
     }}
 
-    Evita el formato markdown en tu respuesta, así como wrappers de json o saltos de línea.
+    Do not use markdown formatting, JSON wrappers, or extra line breaks in your response.
+    Respond in {RESPONSE_LANGUAGE}.
 
-    Texto de la llamada:
+    Call transcript:
     \"\"\"{text}\"\"\"
     """
 

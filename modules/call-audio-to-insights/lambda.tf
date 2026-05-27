@@ -45,10 +45,11 @@ resource "aws_lambda_function" "bedrock" {
   timeout          = 180
   environment {
     variables = {
-      PROJECT_NAME    = "${var.project}-${random_id.suffix.hex}"
-      OUTPUTS_BUCKET  = local.outputs_bucket_name
-      BEDROCK_MODELID = var.bedrock_model_id
-      DYNAMO_DB_TABLE = aws_dynamodb_table.this.name
+      PROJECT_NAME      = "${var.project}-${random_id.suffix.hex}"
+      OUTPUTS_BUCKET    = local.outputs_bucket_name
+      BEDROCK_MODELID   = var.bedrock_model_id
+      DYNAMO_DB_TABLE   = aws_dynamodb_table.this.name
+      RESPONSE_LANGUAGE = var.response_language
     }
   }
 }
