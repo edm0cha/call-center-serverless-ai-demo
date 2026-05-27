@@ -1,4 +1,4 @@
-import os, boto3, uuid
+import os, boto3, uuid, time
 
 # Added Metrics
 from aws_lambda_powertools import Metrics
@@ -43,12 +43,24 @@ def lambda_handler(event, context):
     # Wait for transcription job to complete
     max_attempts = 120
     delay = 5
+    attempt = 0
 
-    waiter = transcribe.get_waiter("transcription_job_completed")
-    waiter.wait(
-        TranscriptionJobName=job_name,
-        WaiterConfig={"Delay": delay, "MaxAttempts": max_attempts},
-    )
+    while attempt < max_attempts:
+        response = transcribe.get_transcription_job(TranscriptionJobName=job_name)
+        status = response['TranscriptionJob']['TranscriptionJobStatus']
+
+        if status == 'COMPLETED':
+            break
+        elif status == 'FAILED':
+            raise Exception(f"Transcription job {job_name} failed")
+
+        # Exponential backoff
+        wait_time = delay * (2 ** min(attempt, 6))  # Cap at 2^6 to avoid too long waits
+        time.sleep(wait_time)
+        attempt += 1
+
+    if attempt >= max_attempts:
+        raise Exception(f"Transcription job {job_name} timed out after {max_attempts} attempts")
     print(f"Transcription job finished {job_name} for {media_uri}, storing result")
 
     # Save transcript job and placeholder

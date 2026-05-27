@@ -53,6 +53,8 @@ def lambda_handler(event, context):
     "call_type": "<personal|negocios>"
     }}
 
+    Evita el formato markdown en tu respuesta, así como wrappers de json o saltos de línea.
+
     Texto de la llamada:
     \"\"\"{text}\"\"\"
     """
