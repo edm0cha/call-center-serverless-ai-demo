@@ -30,7 +30,14 @@ variable "recordings_bucket_name" {
   type    = string
   default = null
 }
+
 variable "outputs_bucket_name" {
   type    = string
   default = null
+}
+
+# Email verification for SES
+variable "verified_email" {
+  type    = string
+  default = ""
 }
