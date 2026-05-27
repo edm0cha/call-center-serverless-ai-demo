@@ -6,3 +6,5 @@ modules/*/layers
 
 .terraform
 .terraform.*
+terraform.tfstate
+terraform.tfstate.*

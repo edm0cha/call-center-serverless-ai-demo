@@ -1,50 +1,122 @@
-resource "aws_lambda_function" "ingest" {
-  function_name    = "${var.project}-ingest-${random_id.suffix.hex}"
-  role             = aws_iam_role.lambda_ingest.arn
-  handler          = "handler_ingest.lambda_handler"
+resource "aws_lambda_function" "transcribe" {
+  function_name    = "${var.project}-transcribe-${random_id.suffix.hex}"
+  role             = aws_iam_role.lambda_transcribe.arn
+  handler          = "handler_transcribe.lambda_handler"
   runtime          = "python3.12"
-  filename         = data.archive_file.ingest_zip.output_path
-  source_code_hash = data.archive_file.ingest_zip.output_base64sha256
+  filename         = data.archive_file.transcribe_zip.output_path
+  source_code_hash = data.archive_file.transcribe_zip.output_base64sha256
+  layers           = ["arn:aws:lambda:${var.region}:${local.aws_account_id}:layer:AWSLambdaPowertoolsPythonV2:78"]
   timeout          = 120
   environment {
     variables = {
-      RECORDINGS_BUCKET   = local.recordings_bucket_name
+      PROJECT_NAME        = "${var.project}-${random_id.suffix.hex}"
       OUTPUTS_BUCKET      = local.outputs_bucket_name
-      REGION              = var.region
-      TRANSCRIBE_LANGCODE = var.transcribe_language_code
+      DYNAMO_DB_TABLE = aws_dynamodb_table.this.name
     }
   }
 }
 
-resource "aws_lambda_function" "post" {
-  function_name    = "${var.project}-post-${random_id.suffix.hex}"
-  role             = aws_iam_role.lambda_post.arn
-  handler          = "handler_post.lambda_handler"
+resource "aws_lambda_function" "sentiment" {
+  function_name    = "${var.project}-sentiment-${random_id.suffix.hex}"
+  role             = aws_iam_role.lambda_sentiment.arn
+  handler          = "handler_sentiment.lambda_handler"
   runtime          = "python3.12"
-  filename         = data.archive_file.post_zip.output_path
-  source_code_hash = data.archive_file.post_zip.output_base64sha256
+  filename         = data.archive_file.sentiment_zip.output_path
+  source_code_hash = data.archive_file.sentiment_zip.output_base64sha256
   layers           = ["arn:aws:lambda:${var.region}:${local.aws_account_id}:layer:AWSLambdaPowertoolsPythonV2:78"]
   timeout          = 180
   environment {
     variables = {
       PROJECT_NAME    = "${var.project}-${random_id.suffix.hex}"
       OUTPUTS_BUCKET  = local.outputs_bucket_name
-      BEDROCK_MODELID = var.bedrock_model_id
-      REGION          = var.region
+      DYNAMO_DB_TABLE = aws_dynamodb_table.this.name
+    }
+  }
+}
+
+resource "aws_lambda_function" "bedrock" {
+  function_name    = "${var.project}-bedrock-${random_id.suffix.hex}"
+  role             = aws_iam_role.lambda_bedrock.arn
+  handler          = "handler_bedrock.lambda_handler"
+  runtime          = "python3.12"
+  filename         = data.archive_file.bedrock_zip.output_path
+  source_code_hash = data.archive_file.bedrock_zip.output_base64sha256
+  layers           = ["arn:aws:lambda:${var.region}:${local.aws_account_id}:layer:AWSLambdaPowertoolsPythonV2:78"]
+  timeout          = 180
+  environment {
+    variables = {
+      PROJECT_NAME      = "${var.project}-${random_id.suffix.hex}"
+      OUTPUTS_BUCKET    = local.outputs_bucket_name
+      BEDROCK_MODELID   = var.bedrock_model_id
+      DYNAMO_DB_TABLE   = aws_dynamodb_table.this.name
+      RESPONSE_LANGUAGE = var.response_language
+    }
+  }
+}
+
+resource "aws_lambda_function" "polly" {
+  function_name    = "${var.project}-polly-${random_id.suffix.hex}"
+  role             = aws_iam_role.lambda_polly.arn
+  handler          = "handler_polly.lambda_handler"
+  runtime          = "python3.12"
+  filename         = data.archive_file.polly_zip.output_path
+  source_code_hash = data.archive_file.polly_zip.output_base64sha256
+  layers           = ["arn:aws:lambda:${var.region}:${local.aws_account_id}:layer:AWSLambdaPowertoolsPythonV2:78"]
+  timeout          = 180
+  environment {
+    variables = {
+      PROJECT_NAME    = "${var.project}-${random_id.suffix.hex}"
+      OUTPUTS_BUCKET  = local.outputs_bucket_name
       POLLY_VOICE_ID  = var.polly_voice_id
       DYNAMO_DB_TABLE = aws_dynamodb_table.this.name
     }
   }
 }
 
-data "archive_file" "ingest_zip" {
-  type        = "zip"
-  source_file = "${path.module}/lambdas/handler_ingest.py"
-  output_path = "${path.module}/build/ingest.zip"
+resource "aws_lambda_function" "ses" {
+  function_name    = "${var.project}-ses-${random_id.suffix.hex}"
+  role             = aws_iam_role.lambda_ses.arn
+  handler          = "handler_ses.lambda_handler"
+  runtime          = "python3.12"
+  filename         = data.archive_file.ses_zip.output_path
+  source_code_hash = data.archive_file.ses_zip.output_base64sha256
+  layers           = ["arn:aws:lambda:${var.region}:${local.aws_account_id}:layer:AWSLambdaPowertoolsPythonV2:78"]
+  timeout          = 60
+  environment {
+    variables = {
+      PROJECT_NAME    = "${var.project}-${random_id.suffix.hex}"
+      DYNAMO_DB_TABLE = aws_dynamodb_table.this.name
+      SOURCE_EMAIL    = var.verified_email
+    }
+  }
 }
 
-data "archive_file" "post_zip" {
+data "archive_file" "transcribe_zip" {
   type        = "zip"
-  source_file = "${path.module}/lambdas/handler_post.py"
-  output_path = "${path.module}/build/post.zip"
+  source_file = "${path.module}/lambdas/handler_transcribe.py"
+  output_path = "${path.module}/build/transcribe.zip"
+}
+
+data "archive_file" "sentiment_zip" {
+  type        = "zip"
+  source_file = "${path.module}/lambdas/handler_sentiment.py"
+  output_path = "${path.module}/build/sentiment.zip"
+}
+
+data "archive_file" "bedrock_zip" {
+  type        = "zip"
+  source_file = "${path.module}/lambdas/handler_bedrock.py"
+  output_path = "${path.module}/build/bedrock.zip"
+}
+
+data "archive_file" "polly_zip" {
+  type        = "zip"
+  source_file = "${path.module}/lambdas/handler_polly.py"
+  output_path = "${path.module}/build/polly.zip"
+}
+
+data "archive_file" "ses_zip" {
+  type        = "zip"
+  source_file = "${path.module}/lambdas/handler_ses.py"
+  output_path = "${path.module}/build/ses.zip"
 }

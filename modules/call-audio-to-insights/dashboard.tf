@@ -5,21 +5,90 @@ resource "aws_cloudwatch_dashboard" "this" {
     "widgets" : [
       {
         "type" : "metric",
-        "height" : 5,
-        "width" : 10,
+        "height" : 4,
+        "width" : 6,
         "y" : 0,
         "x" : 0,
         "properties" : {
           "metrics" : [
-            ["AWS/Lambda", "Invocations", "FunctionName", aws_lambda_function.post.function_name, { "id" : "invokes", "label" : "Total Requests" }],
-            ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.post.function_name, { "id" : "duration", "label" : "Average Response Time", "stat" : "Average" }],
-            ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.post.function_name, { "id" : "invoke_errors", "visible" : false }],
-            ["AWS/Lambda", "Url4xxCount", "FunctionName", aws_lambda_function.post.function_name, { "id" : "errors_400", "visible" : false }],
-            ["AWS/Lambda", "Url5xxCount", "FunctionName", aws_lambda_function.post.function_name, { "id" : "errors_500", "visible" : false }],
+            ["AWS/Lambda", "Invocations", "FunctionName", aws_lambda_function.transcribe.function_name, { "id" : "invokes", "label" : "Total Requests" }],
+            ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.transcribe.function_name, { "id" : "duration", "label" : "Average Response Time", "stat" : "Average" }],
+            ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.transcribe.function_name, { "id" : "invoke_errors", "visible" : false }],
+            ["AWS/Lambda", "Url4xxCount", "FunctionName", aws_lambda_function.transcribe.function_name, { "id" : "errors_400", "visible" : false }],
+            ["AWS/Lambda", "Url5xxCount", "FunctionName", aws_lambda_function.transcribe.function_name, { "id" : "errors_500", "visible" : false }],
             [{ "label" : "Total Errors", "color" : "#d62728", "expression" : "invoke_errors + errors_400 + errors_500", "id" : "total_errors" }],
             [{ "label" : "Sucess Rate (%)", "color" : "#2ca02c", "expression" : "100 - ((total_errors/invokes) * 100)", "id" : "sucess_rate" }]
           ],
-          "title" : "Post Ingestion Lambda",
+          "title" : "Transcribe Lambda",
+          "region" : var.region,
+          "stat" : "Sum",
+          "view" : "singleValue",
+          "setPeriodToTimeRange" : true
+        }
+      },
+      {
+        "type" : "metric",
+        "height" : 4,
+        "width" : 6,
+        "y" : 0,
+        "x" : 6,
+        "properties" : {
+          "metrics" : [
+            ["AWS/Lambda", "Invocations", "FunctionName", aws_lambda_function.sentiment.function_name, { "id" : "invokes", "label" : "Total Requests" }],
+            ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.sentiment.function_name, { "id" : "duration", "label" : "Average Response Time", "stat" : "Average" }],
+            ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.sentiment.function_name, { "id" : "invoke_errors", "visible" : false }],
+            ["AWS/Lambda", "Url4xxCount", "FunctionName", aws_lambda_function.sentiment.function_name, { "id" : "errors_400", "visible" : false }],
+            ["AWS/Lambda", "Url5xxCount", "FunctionName", aws_lambda_function.sentiment.function_name, { "id" : "errors_500", "visible" : false }],
+            [{ "label" : "Total Errors", "color" : "#d62728", "expression" : "invoke_errors + errors_400 + errors_500", "id" : "total_errors" }],
+            [{ "label" : "Sucess Rate (%)", "color" : "#2ca02c", "expression" : "100 - ((total_errors/invokes) * 100)", "id" : "sucess_rate" }]
+          ],
+          "title" : "Sentiment Lambda",
+          "region" : var.region,
+          "stat" : "Sum",
+          "view" : "singleValue",
+          "setPeriodToTimeRange" : true
+        }
+      },
+      {
+        "type" : "metric",
+        "height" : 4,
+        "width" : 6,
+        "y" : 0,
+        "x" : 12,
+        "properties" : {
+          "metrics" : [
+            ["AWS/Lambda", "Invocations", "FunctionName", aws_lambda_function.bedrock.function_name, { "id" : "invokes", "label" : "Total Requests" }],
+            ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.bedrock.function_name, { "id" : "duration", "label" : "Average Response Time", "stat" : "Average" }],
+            ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.bedrock.function_name, { "id" : "invoke_errors", "visible" : false }],
+            ["AWS/Lambda", "Url4xxCount", "FunctionName", aws_lambda_function.bedrock.function_name, { "id" : "errors_400", "visible" : false }],
+            ["AWS/Lambda", "Url5xxCount", "FunctionName", aws_lambda_function.bedrock.function_name, { "id" : "errors_500", "visible" : false }],
+            [{ "label" : "Total Errors", "color" : "#d62728", "expression" : "invoke_errors + errors_400 + errors_500", "id" : "total_errors" }],
+            [{ "label" : "Sucess Rate (%)", "color" : "#2ca02c", "expression" : "100 - ((total_errors/invokes) * 100)", "id" : "sucess_rate" }]
+          ],
+          "title" : "Bedrock Lambda",
+          "region" : var.region,
+          "stat" : "Sum",
+          "view" : "singleValue",
+          "setPeriodToTimeRange" : true
+        }
+      },
+      {
+        "type" : "metric",
+        "height" : 4,
+        "width" : 6,
+        "y" : 0,
+        "x" : 18,
+        "properties" : {
+          "metrics" : [
+            ["AWS/Lambda", "Invocations", "FunctionName", aws_lambda_function.polly.function_name, { "id" : "invokes", "label" : "Total Requests" }],
+            ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.polly.function_name, { "id" : "duration", "label" : "Average Response Time", "stat" : "Average" }],
+            ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.polly.function_name, { "id" : "invoke_errors", "visible" : false }],
+            ["AWS/Lambda", "Url4xxCount", "FunctionName", aws_lambda_function.polly.function_name, { "id" : "errors_400", "visible" : false }],
+            ["AWS/Lambda", "Url5xxCount", "FunctionName", aws_lambda_function.polly.function_name, { "id" : "errors_500", "visible" : false }],
+            [{ "label" : "Total Errors", "color" : "#d62728", "expression" : "invoke_errors + errors_400 + errors_500", "id" : "total_errors" }],
+            [{ "label" : "Sucess Rate (%)", "color" : "#2ca02c", "expression" : "100 - ((total_errors/invokes) * 100)", "id" : "sucess_rate" }]
+          ],
+          "title" : "Polly Lambda",
           "region" : var.region,
           "stat" : "Sum",
           "view" : "singleValue",
@@ -29,8 +98,8 @@ resource "aws_cloudwatch_dashboard" "this" {
       {
         "height" : 5,
         "width" : 7,
-        "y" : 0,
-        "x" : 10,
+        "y" : 4,
+        "x" : 0,
         "type" : "metric",
         "properties" : {
           "view" : "timeSeries",
@@ -47,8 +116,8 @@ resource "aws_cloudwatch_dashboard" "this" {
       {
         "height" : 5,
         "width" : 6,
-        "y" : 0,
-        "x" : 17,
+        "y" : 9,
+        "x" : 7,
         "type" : "metric",
         "properties" : {
           "metrics" : [
@@ -64,7 +133,7 @@ resource "aws_cloudwatch_dashboard" "this" {
       },
       {
         "x" : 0,
-        "y" : 5,
+        "y" : 14,
         "width" : 23,
         "height" : 6,
         "type" : "metric",
@@ -75,13 +144,41 @@ resource "aws_cloudwatch_dashboard" "this" {
             ["${var.project}-${random_id.suffix.hex}", "mixedSentiment", "service", "call-insights"]
           ],
           "region" : var.region,
-          "view" : "gauge",
+          "view" : "bar",
           "stat" : "Sum",
           "setPeriodToTimeRange" : true,
           "sparkline" : false,
           "trend" : false,
           "stacked" : true,
-          "title" : "Call Insights",
+          "title" : "Sentiment Call Insights",
+          "yAxis" : {
+            "left" : {
+              "min" : 1,
+              "max" : 200
+            }
+          }
+        }
+      },
+      {
+        "x" : 0,
+        "y" : 20,
+        "width" : 23,
+        "height" : 6,
+        "type" : "metric",
+        "properties" : {
+          "metrics" : [
+            ["${var.project}-${random_id.suffix.hex}", "personalCall", "service", "call-insights"],
+            ["${var.project}-${random_id.suffix.hex}", "businessCall", "service", "call-insights"],
+            ["${var.project}-${random_id.suffix.hex}", "unknownCall", "service", "call-insights"]
+          ],
+          "region" : var.region,
+          "view" : "bar",
+          "stat" : "Sum",
+          "setPeriodToTimeRange" : true,
+          "sparkline" : false,
+          "trend" : false,
+          "stacked" : true,
+          "title" : "Type Call Insights",
           "yAxis" : {
             "left" : {
               "min" : 1,

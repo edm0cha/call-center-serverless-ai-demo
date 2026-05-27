@@ -1,47 +1,50 @@
 variable "project" { type = string }
-variable "region"  { type = string }
+variable "region" { type = string }
 
-# Prefijos (por si usas Connect o cargas manualmente audios)
-variable "recordings_prefix" { 
-  type = string 
-  default = "audio/" 
-}
-variable "outputs_prefix"    { 
-  type = string
-  default = "outputs/" 
+# S3 key prefix for audio recordings (used by Connect and manual uploads)
+variable "recordings_prefix" {
+  type    = string
+  default = "audio/"
 }
 
-# Modelo de Bedrock (ajusta según región/permisos habilitados)
+# Bedrock model ID or Inference profile ID to use for call analysis
 variable "bedrock_model_id" {
   type        = string
-  description = "e.g. anthropic.claude-3-haiku-20240307-v1:0"
+  description = "e.g. us.anthropic.claude-haiku-4-5-20251001-v1:0"
 }
 
-# Código de idioma para Transcribe (ajústalo según tus audios)
-variable "transcribe_language_code" {
-  type        = string
-  default     = "es-MX"
-  description = "Ej: es-MX, es-ES, en-US, etc."
-}
-
-# Voz de Polly (ej: 'Lucia' para español)
+# Polly voice ID for speech synthesis (e.g. 'Lucia' for Spanish)
 variable "polly_voice_id" {
   type    = string
   default = "Lucia"
 }
 
-# ¿Deseas crear buckets S3 dentro del módulo?
+# Whether to create S3 buckets inside this module
 variable "create_buckets" {
   type    = bool
   default = true
 }
 
-# Si no los creas aquí, puedes inyectar nombres de buckets existentes
-variable "recordings_bucket_name" { 
-  type = string 
-  default = null 
+# Existing bucket names to use when create_buckets is false
+variable "recordings_bucket_name" {
+  type    = string
+  default = null
 }
-variable "outputs_bucket_name"    { 
-  type = string
-  default = null 
+
+variable "outputs_bucket_name" {
+  type    = string
+  default = null
+}
+
+# Email verification for SES
+variable "verified_email" {
+  type    = string
+  default = ""
+}
+
+# Language for Bedrock analysis output (e.g. "English", "Spanish")
+variable "response_language" {
+  type        = string
+  default     = "Spanish"
+  description = "Language in which Bedrock should return the summary, suggested action, and call type analysis."
 }
