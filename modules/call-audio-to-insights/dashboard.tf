@@ -116,7 +116,7 @@ resource "aws_cloudwatch_dashboard" "this" {
       {
         "height" : 5,
         "width" : 6,
-        "y" : 4,
+        "y" : 9,
         "x" : 7,
         "type" : "metric",
         "properties" : {
@@ -133,7 +133,7 @@ resource "aws_cloudwatch_dashboard" "this" {
       },
       {
         "x" : 0,
-        "y" : 5,
+        "y" : 14,
         "width" : 23,
         "height" : 6,
         "type" : "metric",
@@ -150,7 +150,35 @@ resource "aws_cloudwatch_dashboard" "this" {
           "sparkline" : false,
           "trend" : false,
           "stacked" : true,
-          "title" : "Call Insights",
+          "title" : "Sentiment Call Insights",
+          "yAxis" : {
+            "left" : {
+              "min" : 1,
+              "max" : 200
+            }
+          }
+        }
+      },
+      {
+        "x" : 0,
+        "y" : 20,
+        "width" : 23,
+        "height" : 6,
+        "type" : "metric",
+        "properties" : {
+          "metrics" : [
+            ["${var.project}-${random_id.suffix.hex}", "personalCall", "service", "call-insights"],
+            ["${var.project}-${random_id.suffix.hex}", "businessCall", "service", "call-insights"],
+            ["${var.project}-${random_id.suffix.hex}", "unknownCall", "service", "call-insights"]
+          ],
+          "region" : var.region,
+          "view" : "bar",
+          "stat" : "Sum",
+          "setPeriodToTimeRange" : true,
+          "sparkline" : false,
+          "trend" : false,
+          "stacked" : true,
+          "title" : "Type Call Insights",
           "yAxis" : {
             "left" : {
               "min" : 1,
