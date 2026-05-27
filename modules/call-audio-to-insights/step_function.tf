@@ -1,4 +1,5 @@
 resource "aws_sfn_state_machine" "this" {
+  depends_on = [ aws_iam_role_policy.step_function_role_policy ]
   name     = "${var.project}-state-machine-${random_id.suffix.hex}"
   role_arn = aws_iam_role.step_function_role.arn
 
@@ -22,12 +23,12 @@ resource "aws_sfn_state_machine" "this" {
       "Type": "Task",
       "Resource": "${aws_lambda_function.sentiment.arn}",
       "Next": "AnalyzeBedrock"
-    }
+    },
     "AnalyzeBedrock": {
       "Type": "Task",
       "Resource": "${aws_lambda_function.bedrock.arn}",
       "Next": "SummaryPolly"
-    }
+    },
     "SummaryPolly": {
       "Type": "Task",
       "Resource": "${aws_lambda_function.polly.arn}",
