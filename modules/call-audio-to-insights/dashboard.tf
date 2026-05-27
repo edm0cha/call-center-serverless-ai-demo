@@ -5,8 +5,8 @@ resource "aws_cloudwatch_dashboard" "this" {
     "widgets" : [
       {
         "type" : "metric",
-        "height" : 5,
-        "width" : 10,
+        "height" : 4,
+        "width" : 6,
         "y" : 0,
         "x" : 0,
         "properties" : {
@@ -28,10 +28,10 @@ resource "aws_cloudwatch_dashboard" "this" {
       },
       {
         "type" : "metric",
-        "height" : 5,
-        "width" : 10,
+        "height" : 4,
+        "width" : 6,
         "y" : 0,
-        "x" : 10,
+        "x" : 6,
         "properties" : {
           "metrics" : [
             ["AWS/Lambda", "Invocations", "FunctionName", aws_lambda_function.sentiment.function_name, { "id" : "invokes", "label" : "Total Requests" }],
@@ -42,7 +42,53 @@ resource "aws_cloudwatch_dashboard" "this" {
             [{ "label" : "Total Errors", "color" : "#d62728", "expression" : "invoke_errors + errors_400 + errors_500", "id" : "total_errors" }],
             [{ "label" : "Sucess Rate (%)", "color" : "#2ca02c", "expression" : "100 - ((total_errors/invokes) * 100)", "id" : "sucess_rate" }]
           ],
-          "title" : "Transcribe Lambda",
+          "title" : "Sentiment Lambda",
+          "region" : var.region,
+          "stat" : "Sum",
+          "view" : "singleValue",
+          "setPeriodToTimeRange" : true
+        }
+      },
+      {
+        "type" : "metric",
+        "height" : 4,
+        "width" : 6,
+        "y" : 0,
+        "x" : 12,
+        "properties" : {
+          "metrics" : [
+            ["AWS/Lambda", "Invocations", "FunctionName", aws_lambda_function.bedrock.function_name, { "id" : "invokes", "label" : "Total Requests" }],
+            ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.bedrock.function_name, { "id" : "duration", "label" : "Average Response Time", "stat" : "Average" }],
+            ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.bedrock.function_name, { "id" : "invoke_errors", "visible" : false }],
+            ["AWS/Lambda", "Url4xxCount", "FunctionName", aws_lambda_function.bedrock.function_name, { "id" : "errors_400", "visible" : false }],
+            ["AWS/Lambda", "Url5xxCount", "FunctionName", aws_lambda_function.bedrock.function_name, { "id" : "errors_500", "visible" : false }],
+            [{ "label" : "Total Errors", "color" : "#d62728", "expression" : "invoke_errors + errors_400 + errors_500", "id" : "total_errors" }],
+            [{ "label" : "Sucess Rate (%)", "color" : "#2ca02c", "expression" : "100 - ((total_errors/invokes) * 100)", "id" : "sucess_rate" }]
+          ],
+          "title" : "Bedrock Lambda",
+          "region" : var.region,
+          "stat" : "Sum",
+          "view" : "singleValue",
+          "setPeriodToTimeRange" : true
+        }
+      },
+      {
+        "type" : "metric",
+        "height" : 4,
+        "width" : 6,
+        "y" : 0,
+        "x" : 18,
+        "properties" : {
+          "metrics" : [
+            ["AWS/Lambda", "Invocations", "FunctionName", aws_lambda_function.polly.function_name, { "id" : "invokes", "label" : "Total Requests" }],
+            ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.polly.function_name, { "id" : "duration", "label" : "Average Response Time", "stat" : "Average" }],
+            ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.polly.function_name, { "id" : "invoke_errors", "visible" : false }],
+            ["AWS/Lambda", "Url4xxCount", "FunctionName", aws_lambda_function.polly.function_name, { "id" : "errors_400", "visible" : false }],
+            ["AWS/Lambda", "Url5xxCount", "FunctionName", aws_lambda_function.polly.function_name, { "id" : "errors_500", "visible" : false }],
+            [{ "label" : "Total Errors", "color" : "#d62728", "expression" : "invoke_errors + errors_400 + errors_500", "id" : "total_errors" }],
+            [{ "label" : "Sucess Rate (%)", "color" : "#2ca02c", "expression" : "100 - ((total_errors/invokes) * 100)", "id" : "sucess_rate" }]
+          ],
+          "title" : "Polly Lambda",
           "region" : var.region,
           "stat" : "Sum",
           "view" : "singleValue",
@@ -52,8 +98,8 @@ resource "aws_cloudwatch_dashboard" "this" {
       {
         "height" : 5,
         "width" : 7,
-        "y" : 0,
-        "x" : 20,
+        "y" : 4,
+        "x" : 0,
         "type" : "metric",
         "properties" : {
           "view" : "timeSeries",
@@ -70,8 +116,8 @@ resource "aws_cloudwatch_dashboard" "this" {
       {
         "height" : 5,
         "width" : 6,
-        "y" : 0,
-        "x" : 17,
+        "y" : 4,
+        "x" : 7,
         "type" : "metric",
         "properties" : {
           "metrics" : [
@@ -98,7 +144,7 @@ resource "aws_cloudwatch_dashboard" "this" {
             ["${var.project}-${random_id.suffix.hex}", "mixedSentiment", "service", "call-insights"]
           ],
           "region" : var.region,
-          "view" : "gauge",
+          "view" : "bar",
           "stat" : "Sum",
           "setPeriodToTimeRange" : true,
           "sparkline" : false,
