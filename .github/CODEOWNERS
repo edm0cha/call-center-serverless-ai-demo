@@ -1,0 +1,31 @@
+# CODEOWNERS — GitHub automatically requests reviews from the listed owners
+# whenever a PR touches files under each path.
+#
+# ── Format rules ────────────────────────────────────────────────────────────
+# Individual user : @username
+# GitHub team     : @org/team-name   (team must exist in the org)
+#
+# ── Branch protection requirement ───────────────────────────────────────────
+# CODEOWNERS only triggers automatic review requests when the branch has
+# "Require review from Code Owners" enabled:
+#   Settings → Branches → Branch protection rules → edit rule →
+#   ✅ Require review from Code Owners
+# ────────────────────────────────────────────────────────────────────────────
+
+# App content
+/app/                                   @edm0cha
+
+# Root infrastructure config — changes here affect all environments
+/infrastructure/*.tf                    @edm0cha
+
+# Reusable modules — changes here affect every environment that consumes them
+/infrastructure/modules/                @edm0cha
+
+# Shared bootstrap (OIDC provider, IAM roles) — affects every pipeline run
+/infrastructure/shared/                 @edm0cha
+
+# Environment configs
+/infrastructure/environments/dev/       @lg-guerra-g
+
+# CI/CD pipeline definitions
+/.github/workflows/                     @lg-guerra-g

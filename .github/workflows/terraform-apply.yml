@@ -1,0 +1,189 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Unified Apply — shared + dev
+#
+# Triggered on merge to main when infrastructure or app content changes.
+# A setup job inspects which paths changed and selects only the relevant targets:
+#
+#   infrastructure/shared/**          → shared only (OIDC, IAM role, S3 state)
+#   infrastructure/** or app/**       → dev
+#
+# workflow_dispatch lets you target a specific environment manually.
+#
+# Promotion flow (push):
+#   shared (if changed) → dev
+#
+# Each environment maps to a GitHub Actions environment for:
+#   - Protection rules (required reviewers, wait timers)
+#   - Scoped vars: AWS_ROLE_ARN, AWS_REGION, TF_STATE_BUCKET
+#
+# Authentication is via OIDC — temporary credentials, zero static keys.
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: Terraform Apply
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "infrastructure/**"
+      - "app/**"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - shared
+          - dev
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  # ── Detect which targets need to run ───────────────────────────────────────
+  setup:
+    name: Detect targets
+    runs-on: ubuntu-latest
+    outputs:
+      run_shared: ${{ steps.detect.outputs.run_shared }}
+      run_dev: ${{ steps.detect.outputs.run_dev }}
+    steps:
+      - name: Checkout
+        if: github.event_name == 'push'
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - id: detect
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            ENV="${{ inputs.environment }}"
+            case "$ENV" in
+              shared)
+                echo "run_shared=true"  >> "$GITHUB_OUTPUT"
+                echo "run_dev=false"    >> "$GITHUB_OUTPUT" ;;
+              dev)
+                echo "run_shared=false" >> "$GITHUB_OUTPUT"
+                echo "run_dev=true"     >> "$GITHUB_OUTPUT" ;;
+              *)
+                echo "run_shared=true"  >> "$GITHUB_OUTPUT"
+                echo "run_dev=true"     >> "$GITHUB_OUTPUT" ;;
+            esac
+          else
+            BEFORE="${{ github.event.before }}"
+            if [[ "$BEFORE" == "0000000000000000000000000000000000000000" ]]; then
+              CHANGED=$(git ls-files)
+            else
+              CHANGED=$(git diff --name-only "$BEFORE" "${{ github.sha }}")
+            fi
+
+            SHARED_CHANGED=false
+            OTHER_CHANGED=false
+            while IFS= read -r f; do
+              [[ "$f" == infrastructure/shared/* ]]                                          && SHARED_CHANGED=true
+              [[ "$f" == infrastructure/* && "$f" != infrastructure/shared/* ]] && OTHER_CHANGED=true
+              [[ "$f" == app/* ]] && OTHER_CHANGED=true
+            done <<< "$CHANGED"
+
+            echo "run_shared=$SHARED_CHANGED" >> "$GITHUB_OUTPUT"
+            echo "run_dev=$OTHER_CHANGED"     >> "$GITHUB_OUTPUT"
+          fi
+
+  # ── Apply shared bootstrap resources ────────────────────────────────────────
+  # These underpin the entire CI/CD pipeline — OIDC provider, IAM role, SCP.
+  # Add a required reviewer to the "shared" GitHub Actions environment.
+  deploy-shared:
+    name: Apply — shared
+    runs-on: ubuntu-latest
+    environment: shared
+    needs: setup
+    if: needs.setup.outputs.run_shared == 'true'
+    env:
+      TF_VAR_repository_name: ${{ github.event.repository.name }}
+      TF_VAR_repository_organization: ${{ github.repository_owner }}
+
+    defaults:
+      run:
+        working-directory: infrastructure/shared
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "~1.14"
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
+            -backend-config="key=${{ github.event.repository.name }}/terraform.tfstate" \
+            -backend-config="region=${{ vars.AWS_REGION }}" \
+            -input=false
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -input=false
+
+      - name: Print outputs
+        run: terraform output
+
+  # ── Deploy to Dev ─────────────────────────────────────────────────────────
+  deploy-dev:
+    name: Apply — dev
+    runs-on: ubuntu-latest
+    environment: dev
+    needs: [setup, deploy-shared]
+    # always() lets this evaluate even when deploy-shared was skipped.
+    if: always() && needs.setup.outputs.run_dev == 'true' && (needs.deploy-shared.result == 'success' || needs.deploy-shared.result == 'skipped')
+    env:
+      TF_VAR_repository_name: ${{ github.event.repository.name }}
+      TF_VAR_repository_organization: ${{ github.repository_owner }}
+
+    defaults:
+      run:
+        working-directory: infrastructure
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "~1.14"
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
+            -backend-config="key=dev/website/terraform.tfstate" \
+            -backend-config="region=${{ vars.AWS_REGION }}" \
+            -input=false
+
+      - name: Terraform Apply
+        run: |
+          terraform apply \
+            -var-file="environments/dev/terraform.tfvars" \
+            -auto-approve \
+            -input=false
